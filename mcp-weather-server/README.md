@@ -54,7 +54,7 @@ Add this configuration to your Claude Desktop config file:
   "mcpServers": {
     "weather": {
       "command": "uv",
-      "args": ["run", "python", "/Users/rahultomar/rahul-dev/gen-ai-projects/mcp-weather-server/main.py"],
+      "args": ["run", "python", "~/gen-ai-projects/mcp-weather-server/main.py"],
       "env": {}
     }
   }
