@@ -1,80 +1,78 @@
 version: '3.8'
 
 services:
-  banking-fraud-mcp:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: banking-fraud-detection
-    restart: unless-stopped
-    
-    # Environment variables
-    environment:
-      - MCP_SERVER_NAME=banking-fraud-detection
-      - DATABASE_PATH=/app/data/bank.db
-      - PYTHONPATH=/app
-      
-    # Volume mounts for persistent data
+  fraud-detection:
+    build: .
+    container_name: banking-fraud-mcp
     volumes:
       - fraud_data:/app/data
-      - ./logs:/app/logs
-      
-    # Port mapping (for future HTTP endpoints)
+      - fraud_models:/app/models
+      - fraud_logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - MCP_SERVER_NAME=banking-fraud-detection
+      - DATABASE_PATH=/app/data/bank.db
+      - ML_MODELS_PATH=/app/models
+      - LOG_LEVEL=INFO
+      - FRAUD_THRESHOLD=0.5
+      - ANOMALY_THRESHOLD=-0.1
+      - ML_ENABLED=true
+      - OPENMP_NUM_THREADS=2
     ports:
       - "6277:6277"
-      
-    # Health check
     healthcheck:
       test: ["CMD", "uv", "run", "python", "/app/healthcheck.py"]
       interval: 30s
-      timeout: 10s
+      timeout: 15s
       retries: 3
       start_period: 10s
-      
-    # Resource limits
+    restart: unless-stopped
     deploy:
       resources:
         limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
           memory: 512M
           cpus: '0.5'
-        reservations:
-          memory: 256M
-          cpus: '0.25'
-          
-    # Logging configuration
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    networks:
+      - fraud-net
 
-  # Optional: Add a monitoring service
+  # Optional: Monitoring service for ML metrics
   monitoring:
     image: prom/prometheus:latest
     container_name: fraud-monitoring
-    restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
-    profiles:
+    networks:
+      - fraud-net
+    profiles: 
       - monitoring
 
 volumes:
   fraud_data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data
+  fraud_models:
+    driver: local
+  fraud_logs:
+    driver: local
+  prometheus_data:
+    driver: local
 
 networks:
-  default:
-    name: fraud-detection-network
+  fraud-net:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

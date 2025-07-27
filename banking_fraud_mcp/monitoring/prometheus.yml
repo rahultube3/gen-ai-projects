@@ -1,0 +1,30 @@
+# Prometheus configuration for Banking Fraud Detection MCP Server
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Banking Fraud Detection MCP Server metrics
+  - job_name: 'banking-fraud-mcp'
+    static_configs:
+      - targets: ['fraud-detection:8000']
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    scheme: 'http'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+# Alerting configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           # - "alertmanager:9093"

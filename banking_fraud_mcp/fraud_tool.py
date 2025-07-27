@@ -2,9 +2,8 @@ import duckdb
 import os
 
 def check_transaction(txn_id: str):
-    # Get the absolute path to the database file
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = os.path.join(os.path.dirname(current_dir), "banking_fraud_mcp/bank.db")
+    # Get database path from environment or use default
+    db_path = os.getenv('DATABASE_PATH', 'data/bank.db')
     
     conn = duckdb.connect(db_path)
 

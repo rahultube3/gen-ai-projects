@@ -71,11 +71,15 @@ class FraudDetectionClient:
                 print(f"❌ {result.get('txn_id', 'Unknown')}: {result['error']}")
                 error_count += 1
             else:
-                risk_icon = "🚨" if result.get('risk_level') == 'High' else "✅"
-                print(f"{risk_icon} {result.get('txn_id')}: Score {result.get('fraud_score')} "
-                      f"({result.get('risk_level')} Risk)")
+                # Extract fraud score and risk level from the correct fields
+                fraud_score = result.get('ml_analysis', {}).get('combined_fraud_score', 'N/A')
+                risk_level = result.get('ml_analysis', {}).get('risk_level', 'Unknown')
                 
-                if result.get('risk_level') == 'High':
+                risk_icon = "🚨" if risk_level in ['High', 'CRITICAL'] else "⚠️" if risk_level in ['MEDIUM', 'Medium'] else "✅"
+                print(f"{risk_icon} {result.get('txn_id')}: Score {fraud_score:.3f} "
+                      f"({risk_level} Risk)")
+                
+                if risk_level in ['High', 'CRITICAL']:
                     high_risk_count += 1
                 else:
                     low_risk_count += 1
@@ -91,11 +95,12 @@ async def main():
     """Main function for batch fraud detection."""
     client = FraudDetectionClient()
     
-    # Test with multiple transaction IDs
+    # Test with multiple transaction IDs from the database
     test_transactions = [
-        "txn001",           # Known transaction - high risk
-        "nonexistent_txn",  # Non-existent transaction
-        "txn002",           # Another non-existent transaction
+        "txn001",          # Known transaction - test case 1
+        "txn021",          # Known transaction - test case 2  
+        "txn031",          # Known transaction - test case 3
+        "nonexistent_txn", # Non-existent transaction
     ]
     
     print("🔍 Batch Fraud Detection Testing")

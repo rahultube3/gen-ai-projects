@@ -52,9 +52,28 @@ async def run_fraud_client():
                         else:
                             print(f"📋 Transaction ID: {fraud_data.get('txn_id')}")
                             print(f"👤 Customer ID: {fraud_data.get('customer_id')}")
-                            print(f"⚠️  Fraud Score: {fraud_data.get('fraud_score')}")
-                            print(f"🚨 Risk Level: {fraud_data.get('risk_level')}")
-                            print(f"💡 Reasoning: {fraud_data.get('reasoning')}")
+                            print(f"💰 Amount: ${fraud_data.get('amount')}")
+                            print(f"📍 Location: {fraud_data.get('location')}")
+                            
+                            # Extract ML analysis data
+                            ml_analysis = fraud_data.get('ml_analysis', {})
+                            fraud_score = ml_analysis.get('combined_fraud_score', 'N/A')
+                            risk_level = ml_analysis.get('risk_level', 'Unknown')
+                            ml_probability = ml_analysis.get('ml_fraud_probability', 'N/A')
+                            confidence = ml_analysis.get('confidence', 'N/A')
+                            
+                            print(f"⚠️  Combined Fraud Score: {fraud_score}")
+                            print(f"🚨 Risk Level: {risk_level}")
+                            print(f"🤖 ML Fraud Probability: {ml_probability}")
+                            print(f"📊 Model Confidence: {confidence}")
+                            print(f"💡 Recommendation: {fraud_data.get('recommendation', 'N/A')}")
+                            
+                            # Show key risk factors
+                            risk_factors = fraud_data.get('risk_factors', {})
+                            if risk_factors:
+                                print("🔍 Risk Factors:")
+                                for factor, description in risk_factors.items():
+                                    print(f"   • {factor}: {description}")
                     
                 except Exception as e:
                     print(f"❌ Error calling tool: {e}")

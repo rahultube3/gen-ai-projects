@@ -45,10 +45,9 @@ async def run_demo_queries():
 
     # Demo queries with transaction IDs
     demo_transactions = [
-        ("txn001", "High-risk: Alice, $4000 in New York"),
-        ("txn002", "Low-risk: Bob, $150 in HomeCity"), 
-        ("txn003", "Very high-risk: Carol, $5000 in Las Vegas"),
-        ("txn004", "Low-risk: Alice, $25 in HomeCity"),
+        ("txn001", "Customer cust123, $4000 in New York"),
+        ("txn021", "Customer cust124, $4000 in New York"), 
+        ("txn031", "Customer cust125, $4000 in New York"),
         ("nonexistent_txn", "Non-existent transaction test"),
     ]
 
@@ -63,16 +62,25 @@ async def run_demo_queries():
             if "error" in result:
                 print(f"❌ Error: {result['error']}")
             else:
+                # Extract ML analysis data
+                ml_analysis = result.get('ml_analysis', {})
+                fraud_score = ml_analysis.get('combined_fraud_score', 'N/A')
+                risk_level = ml_analysis.get('risk_level', 'Unknown')
+                ml_probability = ml_analysis.get('ml_fraud_probability', 'N/A')
+                
                 print(f"📊 Fraud Analysis Results:")
                 print(f"   Transaction ID: {result.get('txn_id')}")
                 print(f"   Customer ID: {result.get('customer_id')}")
-                print(f"   Fraud Score: {result.get('fraud_score')}")
-                print(f"   Risk Level: {result.get('risk_level')}")
-                print(f"   Reasoning: {result.get('reasoning')}")
+                print(f"   Amount: ${result.get('amount')}")
+                print(f"   Location: {result.get('location')}")
+                print(f"   Combined Fraud Score: {fraud_score}")
+                print(f"   Risk Level: {risk_level}")
+                print(f"   ML Probability: {ml_probability}")
+                print(f"   Recommendation: {result.get('recommendation')}")
                 
                 # Risk level emoji
-                risk_emoji = "🚨" if result.get('risk_level') == 'High' else "✅"
-                print(f"   {risk_emoji} Overall Assessment: {result.get('risk_level')} Risk")
+                risk_emoji = "🚨" if risk_level in ['High', 'CRITICAL'] else "⚠️" if risk_level == 'MEDIUM' else "✅"
+                print(f"   {risk_emoji} Overall Assessment: {risk_level} Risk")
                 
         except Exception as e:
             logging.error(f"Error: {e}")
@@ -159,20 +167,29 @@ async def run_interactive_chat():
             if "error" in result:
                 print(f"❌ {result['error']}")
             else:
+                # Extract ML analysis data
+                ml_analysis = result.get('ml_analysis', {})
+                fraud_score = ml_analysis.get('combined_fraud_score', 'N/A')
+                risk_level = ml_analysis.get('risk_level', 'Unknown')
+                ml_probability = ml_analysis.get('ml_fraud_probability', 'N/A')
+                
                 print(f"\n📊 Fraud Analysis Results:")
                 print(f"┌─────────────────────────────────────┐")
                 print(f"│ Transaction ID: {result.get('txn_id', 'N/A'):<19} │")
                 print(f"│ Customer ID:    {result.get('customer_id', 'N/A'):<19} │")
-                print(f"│ Fraud Score:    {result.get('fraud_score', 'N/A'):<19} │")
-                print(f"│ Risk Level:     {result.get('risk_level', 'N/A'):<19} │")
+                print(f"│ Amount:         ${result.get('amount', 'N/A'):<18} │")
+                print(f"│ Fraud Score:    {fraud_score:<19} │")
+                print(f"│ Risk Level:     {risk_level:<19} │")
                 print(f"└─────────────────────────────────────┘")
-                print(f"💡 Reasoning: {result.get('reasoning', 'N/A')}")
+                print(f"💡 Recommendation: {result.get('recommendation', 'N/A')}")
+                print(f"🤖 ML Probability: {ml_probability}")
                 
                 # Risk assessment
-                risk_level = result.get('risk_level', 'Unknown')
-                if risk_level == 'High':
+                if risk_level in ['High', 'CRITICAL']:
                     print(f"🚨 HIGH RISK TRANSACTION - Requires immediate review!")
-                elif risk_level == 'Low':
+                elif risk_level == 'MEDIUM':
+                    print(f"⚠️ MEDIUM RISK TRANSACTION - Consider additional review")
+                elif risk_level in ['Low', 'LOW']:
                     print(f"✅ Low risk transaction - Appears normal")
                 else:
                     print(f"❓ Unknown risk level")
