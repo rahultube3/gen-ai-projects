@@ -245,6 +245,67 @@ print('📊 Model files saved to models/ directory')
 "
 }
 
+# Function to retrain ML models with enhanced data
+retrain_models() {
+    print_header "Retraining ML Models with Enhanced Data"
+    local banking_dir="$PROJECT_DIR/banking_fraud_mcp"
+    cd "$banking_dir"
+    
+    if ! check_ml_dependencies >/dev/null; then
+        print_error "ML dependencies required for model retraining"
+        return 1
+    fi
+    
+    # Make sure we're in the right directory after dependency check
+    cd "$banking_dir"
+    
+    print_info "Checking database and training data..."
+    if [ ! -f "data/bank.db" ]; then
+        print_warning "Database not found. Setting up database first..."
+        uv run python db_setup.py
+        if [ $? -ne 0 ]; then
+            print_error "Failed to setup database"
+            return 1
+        fi
+    fi
+    
+    print_ml "Starting comprehensive model retraining process..."
+    print_info "This will:"
+    print_info "• Load enhanced transaction data with diverse risk levels"
+    print_info "• Create feature-rich training dataset"
+    print_info "• Train XGBoost classifier with 13 advanced features"
+    print_info "• Train Isolation Forest for anomaly detection"
+    print_info "• Validate model performance across risk levels"
+    print_info "• Save optimized models for production use"
+    
+    echo ""
+    read -p "Continue with model retraining? [y/N]: " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        print_ml "🚀 Starting model retraining..."
+        uv run python retrain_ml_model.py
+        
+        if [ $? -eq 0 ]; then
+            print_status "Model retraining completed successfully!"
+            print_ml "Running quick validation test..."
+            uv run python quick_test.py
+            
+            if [ $? -eq 0 ]; then
+                print_status "Model validation passed!"
+                print_info "Updated models saved to models/ directory"
+                print_ml "🎉 Fraud detection system upgraded with retrained models!"
+            else
+                print_warning "Model validation had issues, but training completed"
+            fi
+        else
+            print_error "Model retraining failed"
+            return 1
+        fi
+    else
+        print_info "Model retraining cancelled"
+    fi
+}
+
 # Function to check ML model status
 ml_status() {
     print_header "ML Fraud Detection Model Status"
@@ -323,13 +384,13 @@ setup_db() {
 # Function to show enhanced database status with ML insights
 db_status() {
     print_header "Banking Fraud Detection Database Status"
-    cd "$PROJECT_DIR"
+    cd "$PROJECT_DIR/banking_fraud_mcp"
     python3 -c "
 import duckdb
 import os
 
-current_dir = os.path.dirname(os.path.abspath('banking_fraud_mcp/fraud_server.py'))
-db_path = os.path.join(current_dir, 'bank.db')
+# Look for database in the data directory
+db_path = os.path.join('data', 'bank.db')
 
 try:
     conn = duckdb.connect(db_path)
@@ -344,7 +405,7 @@ try:
     
     # Calculate fraud statistics
     high_risk_txns = conn.execute('SELECT COUNT(*) FROM transactions WHERE amount > 3000').fetchone()[0]
-    unfamiliar_locations = conn.execute('SELECT COUNT(*) FROM transactions WHERE location != \"HomeCity\"').fetchone()[0]
+    unfamiliar_locations = conn.execute(\"SELECT COUNT(*) FROM transactions WHERE location != 'HomeCity'\").fetchone()[0]
     
     print(f'\\n🚨 Risk Analysis:')
     print(f'  • High-amount transactions (>\$3000): {high_risk_txns}')
@@ -442,6 +503,9 @@ case "$1" in
     train-models)
         train_models
         ;;
+    retrain-models)
+        retrain_models
+        ;;
     ml-status)
         ml_status
         ;;
@@ -504,6 +568,7 @@ case "$1" in
         echo -e "${PURPLE}ML Commands:${NC}"
         echo "  ml-demo       - Run comprehensive XGBoost ML fraud detection demo"
         echo "  train-models  - Manually train and save ML models"
+        echo "  retrain-models - Retrain models with enhanced diverse risk data"
         echo "  ml-status     - Check ML model and dependency status"
         echo "  install-deps  - Install all required ML dependencies"
         echo ""
@@ -529,6 +594,7 @@ case "$1" in
         echo "  $0 start                    # Start ML-enhanced server"
         echo "  $0 ml-demo                  # Run XGBoost fraud detection demo"
         echo "  $0 train-models             # Train ML models manually"
+        echo "  $0 retrain-models           # Retrain with enhanced diverse data"
         echo "  $0 ml-status                # Check ML model status"
         echo "  $0 background               # Start server in background"
         echo "  $0 inspector                # Start with web inspector"
