@@ -1,0 +1,129 @@
+<div class="chat-container">
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="header-content">
+      <div class="avatar">
+        <span class="avatar-icon">⚖️</span>
+      </div>
+      <div class="header-info">
+        <h2>Legal Document Assistant</h2>
+        <p class="status" [class.online]="isConnected">
+          {{ isConnected ? 'Connected' : 'Connecting...' }}
+        </p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" (click)="clearChat()" title="Clear Chat">
+          🗑️
+        </button>
+        <button class="btn-icon" (click)="toggleSettings()" title="Settings">
+          ⚙️
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-panel" [class.active]="showSettings">
+    <div class="settings-content">
+      <h3>Settings</h3>
+      <div class="setting-item">
+        <label for="userRole">User Role:</label>
+        <select id="userRole" [(ngModel)]="userRole" class="form-select">
+          <option value="client">Client</option>
+          <option value="paralegal">Paralegal</option>
+          <option value="attorney">Attorney</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Available Categories:</label>
+        <div class="categories-list">
+          <span *ngFor="let category of availableCategories" class="category-tag">
+            {{ category }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="messages-container" #messagesContainer>
+    <div class="messages-list">
+      <div 
+        *ngFor="let message of messages; trackBy: trackByMessageId" 
+        class="message-wrapper"
+        [class.user-message]="message.sender === 'user'"
+        [class.assistant-message]="message.sender === 'assistant'">
+        
+        <div class="message">
+          <div class="message-avatar">
+            <span *ngIf="message.sender === 'user'" class="user-avatar">👤</span>
+            <span *ngIf="message.sender === 'assistant'" class="assistant-avatar">⚖️</span>
+          </div>
+          
+          <div class="message-content">
+            <div class="message-text" [innerHTML]="formatMessage(message.content)"></div>
+            <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+          </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div *ngIf="message.isTyping" class="typing-indicator">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="input-container">
+    <div class="input-wrapper">
+      <div class="input-field">
+        <textarea 
+          #messageInput
+          [(ngModel)]="currentMessage"
+          (keydown)="onKeyDown($event)"
+          placeholder="Ask a legal question..."
+          class="message-input"
+          rows="1"
+          [disabled]="isLoading"></textarea>
+        
+        <button 
+          class="send-button"
+          (click)="sendMessage()"
+          [disabled]="!currentMessage.trim() || isLoading"
+          title="Send message">
+          <span *ngIf="!isLoading">➤</span>
+          <span *ngIf="isLoading" class="loading-spinner">⟳</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Suggested Questions -->
+    <div class="suggestions" *ngIf="suggestedQuestions.length && messages.length <= 1">
+      <p class="suggestions-title">Try asking about:</p>
+      <div class="suggestions-list">
+        <button 
+          *ngFor="let question of suggestedQuestions" 
+          class="suggestion-chip"
+          (click)="selectSuggestion(question)">
+          {{ question }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar" *ngIf="lastSearchInfo">
+    <small>
+      Found {{ lastSearchInfo.total_results }} results in {{ lastSearchInfo.duration }}s
+      <span *ngIf="lastSearchInfo.compliance_score !== undefined">
+        | Compliance: {{ (lastSearchInfo.compliance_score * 100).toFixed(0) }}%
+      </span>
+    </small>
+  </div>
+</div>

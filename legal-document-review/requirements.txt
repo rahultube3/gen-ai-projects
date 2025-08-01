@@ -1,0 +1,34 @@
+# Core Dependencies for Legal Document RAG System
+pymongo==4.10.1
+python-dotenv==1.1.1
+numpy==2.3.2
+scikit-learn==1.6.1
+
+# AI/ML Dependencies
+transformers==4.50.0
+tokenizers>=0.15.0
+
+# Compliance and Validation
+pydantic>=2.5.0
+validators>=0.22.0
+
+# API Framework (optional)
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+
+# Guardrails (optional - install separately if needed)
+# guardrails-ai>=0.4.0
+
+# Development Dependencies (optional)
+pytest>=7.4.0
+black>=23.0.0
+flake8>=6.0.0
+
+# Logging and Monitoring (optional)
+structlog>=23.2.0
+
+# Note: PyTorch (torch) and sentence-transformers are not compatible with Python 3.13
+# This system uses TF-IDF instead for broader compatibility
+# sentence-transformers==3.3.1
+# torch==2.5.1

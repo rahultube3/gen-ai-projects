@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # Main Streamlit Application
+  spending-insights:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spending-insights-app
+    ports:
+      - "8501:8501"
+    environment:
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      
+      # Application Settings
+      - REDACTION_LEVEL=${REDACTION_LEVEL:-MEDIUM}
+      - CACHE_TTL_HOURS=${CACHE_TTL_HOURS:-24}
+      - MAX_SEARCH_RESULTS=${MAX_SEARCH_RESULTS:-10}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Database Settings
+      - DB_PATH=/app/data/spending_insights.db
+      - VECTORSTORE_CACHE_DIR=/app/vectorstore_cache
+      
+      # Streamlit Configuration
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_ENABLE_CORS=false
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    volumes:
+      # Persistent data storage
+      - spending_data:/app/data
+      - vectorstore_cache:/app/vectorstore_cache
+      - app_logs:/app/logs
+      
+      # Optional: Mount local .env file (for development)
+      # - ./.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - spending-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spending-insights.rule=Host(`spending.localhost`)"
+      - "traefik.http.services.spending-insights.loadbalancer.server.port=8501"
+
+  # Optional: FastAPI Backend (if using main.py)
+  spending-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: spending-api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DB_PATH=/app/data/spending_insights.db
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - spending_data:/app/data
+      - vectorstore_cache:/app/vectorstore_cache
+    restart: unless-stopped
+    depends_on:
+      - spending-insights
+    networks:
+      - spending-network
+    profiles:
+      - "api"  # Only start with --profile api
+
+  # Reverse Proxy (Optional - for production)
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - spending-network
+    profiles:
+      - "production"
+
+  # Database backup service (Optional)
+  db-backup:
+    image: alpine:latest
+    container_name: spending-db-backup
+    environment:
+      - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}  # Daily at 2 AM
+    volumes:
+      - spending_data:/app/data:ro
+      - backup_data:/backups
+    command: |
+      sh -c '
+        apk add --no-cache dcron
+        echo "$${BACKUP_SCHEDULE} cp /app/data/spending_insights.db /backups/spending_insights_$$(date +%Y%m%d_%H%M%S).db && find /backups -name "*.db" -mtime +7 -delete" | crontab -
+        crond -f
+      '
+    restart: unless-stopped
+    networks:
+      - spending-network
+    profiles:
+      - "backup"
+
+# Named volumes for data persistence
+volumes:
+  spending_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+  vectorstore_cache:
+    driver: local
+  app_logs:
+    driver: local
+  backup_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./backups
+
+# Custom network
+networks:
+  spending-network:
+    driver: bridge

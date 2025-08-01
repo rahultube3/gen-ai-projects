@@ -16,3 +16,11 @@ dependencies = [
     "scikit-learn>=1.7.1",
     "xgboost>=3.0.2",
 ]
+
+[tool.uv.workspace]
+members = [
+    "fantasynerds-mlb",
+    "spending-insights-budgeting",
+    "legal-document-review/legal-document-review",
+    "legal-document-review",
+]
