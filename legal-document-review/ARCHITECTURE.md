@@ -1,8 +1,8 @@
-# Legal Document Review System - Technical Architecture
+# AI-powered Legal Document Search System - Technical Architecture
 
 ## 🏗️ **System Architecture Overview**
 
-The Legal Document Review System follows a modern, layered architecture pattern with clear separation of concerns, ensuring maintainability, scalability, and security. The system is designed around the principles of Domain-Driven Design (DDD) and Clean Architecture.
+The AI-powered Legal Document Search System follows a modern, layered architecture pattern with clear separation of concerns, ensuring maintainability, scalability, and security. The system is designed around the principles of Domain-Driven Design (DDD) and Clean Architecture.
 
 ## 📐 **Architectural Patterns**
 

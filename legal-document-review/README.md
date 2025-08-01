@@ -1,4 +1,4 @@
-# Legal Document Review RAG System with Compliance Guardrails
+# AI-powered Legal Document Search RAG System with Compliance Guardrails
 
 🏛️ A comprehensive AI-powered legal document search and retrieval system with integrated compliance monitoring and safety guardrails.
 

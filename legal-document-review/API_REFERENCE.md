@@ -1,8 +1,8 @@
-# Legal Document Review API - Reference Documentation
+# AI-powered Legal Document Search API - Reference Documentation
 
 ## 📚 **API Overview**
 
-The Legal Document Review API is a RESTful web service that provides secure, compliant access to legal document search and retrieval functionality. Built with FastAPI, it offers high-performance document search with integrated compliance guardrails.
+The AI-powered Legal Document Search API is a RESTful web service that provides secure, compliant access to legal document search and retrieval functionality. Built with FastAPI, it offers high-performance document search with integrated compliance guardrails.
 
 ## 🌐 **Base Information**
 

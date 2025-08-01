@@ -1,8 +1,8 @@
-# Legal Document Review System - Deployment Guide
+# AI-powered Legal Document Search System - Deployment Guide
 
 ## 🚀 **Deployment Overview**
 
-This guide provides comprehensive instructions for deploying the Legal Document Review System across different environments, from local development to production deployment.
+This guide provides comprehensive instructions for deploying the AI-powered Legal Document Search System across different environments, from local development to production deployment.
 
 ## 📋 **Prerequisites**
 

@@ -1,13 +1,13 @@
-# Legal Document Review System - User Manual
+# AI-powered Legal Document Search System - User Manual
 
-## 📖 **Welcome to the Legal Document Review System**
+## 📖 **Welcome to the AI-powered Legal Document Search System**
 
-This comprehensive user manual provides detailed instructions for using the Legal Document Review System, a cutting-edge AI-powered platform designed for legal professionals to search, analyze, and review legal documents efficiently and compliantly.
+This comprehensive user manual provides detailed instructions for using the AI-powered Legal Document Search System, a cutting-edge AI-powered platform designed for legal professionals to search, analyze, and review legal documents efficiently and compliantly.
 
 ## 🎯 **System Overview**
 
-### **What is the Legal Document Review System?**
-The Legal Document Review System is an advanced document search and analysis platform that combines artificial intelligence with legal compliance safeguards. It enables legal professionals to:
+### **What is the AI-powered Legal Document Search System?**
+The AI-powered Legal Document Search System is an advanced document search and analysis platform that combines artificial intelligence with legal compliance safeguards. It enables legal professionals to:
 
 - **Search thousands of legal documents** using natural language queries
 - **Access role-based content** appropriate to user permissions

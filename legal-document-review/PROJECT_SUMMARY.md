@@ -1,14 +1,14 @@
-# Legal Document search System - Project Summary
+# AI-powered Legal Document Search System - Project Summary
 
 ## 🏛️ **Overview**
 
-The Legal Document search System is a sophisticated AI-powered platform designed for secure, compliant, and efficient legal document search and retrieval. Built with enterprise-grade compliance guardrails, this system enables legal professionals to perform semantic searches across large document repositories while maintaining strict adherence to legal and ethical standards.
+The AI-powered Legal Document Search System is a sophisticated AI-powered platform designed for secure, compliant, and efficient legal document search and retrieval. Built with enterprise-grade compliance guardrails, this system enables legal professionals to perform semantic searches across large document repositories while maintaining strict adherence to legal and ethical standards.
 
 ## 📋 **Project Information**
 
 | Attribute | Details |
 |-----------|---------|
-| **Project Name** | Legal Document search RAG System |
+| **Project Name** | AI-powered Legal Document Search RAG System |
 | **Version** | 1.0.0 |
 | **Primary Language** | Python 3.8+ |
 | **Framework** | FastAPI + Angular |
