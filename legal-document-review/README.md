@@ -345,10 +345,6 @@ python api_server.py         # API server
 5. Ensure compliance checks pass
 6. Submit a pull request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## ⚖️ Legal Notice
 
 This system is designed to assist with legal document research and analysis. It does not provide legal advice and should not be used as a substitute for consultation with qualified legal professionals. Users are responsible for ensuring compliance with applicable laws and regulations in their jurisdiction.
