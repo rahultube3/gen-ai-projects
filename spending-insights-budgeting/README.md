@@ -3,7 +3,6 @@
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)](https://streamlit.io)
 [![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4-green)](https://openai.com)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 > **AI-powered financial analytics dashboard with real-time insights, RAG-based queries, and advanced visualizations**
 
@@ -442,10 +441,6 @@ We welcome contributions! Please see our contributing guidelines:
 - Add tests for new features
 - Update documentation
 - Ensure privacy compliance
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
