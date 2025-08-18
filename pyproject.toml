@@ -23,4 +23,6 @@ members = [
     "spending-insights-budgeting",
     "legal-document-review/legal-document-review",
     "legal-document-review",
+    "e-commerce-assistant",
+    "hr-assistant",
 ]

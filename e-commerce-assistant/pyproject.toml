@@ -1,0 +1,24 @@
+[project]
+name = "e-commerce-assistant"
+version = "0.1.0"
+description = "E-commerce RAG Assistant with FastAPI and MCP Protocol Support"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chromadb>=1.0.15",
+    "faiss-cpu>=1.11.0.post1",
+    "faker>=37.5.3",
+    "langchain>=0.3.26",
+    "langchain-community>=0.3.27",
+    "langchain-mongodb>=0.6.2",
+    "langchain-openai>=0.3.28",
+    "langchain-core>=0.3.34",
+    "pymongo>=4.13.2",
+    "python-dotenv>=1.1.1",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.10.0",
+    "mcp[cli]>=1.12.1",
+    "httpx>=0.25.0",
+    "aiofiles>=23.2.1",
+]

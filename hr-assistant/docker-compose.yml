@@ -1,0 +1,137 @@
+# HR Assistant Docker Compose Configuration
+# Orchestrates the complete HR Assistant system with all components
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: hr-assistant-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-secure_password}
+      MONGO_INITDB_DATABASE: hr_assistant
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - hr-assistant-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RAG System API
+  rag-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.rag
+    container_name: hr-assistant-rag-api
+    restart: unless-stopped
+    environment:
+      - MONGO_DB_URI=mongodb://admin:secure_password@mongodb:27017/hr_assistant?authSource=admin
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - RAG_TOP_K=5
+      - LLM_MODEL=gpt-3.5-turbo
+    ports:
+      - "8001:8001"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - hr-assistant-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Comprehensive API
+  comprehensive-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: hr-assistant-comprehensive-api
+    restart: unless-stopped
+    environment:
+      - MONGO_DB_URI=mongodb://admin:secure_password@mongodb:27017/hr_assistant?authSource=admin
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - RAG_API_URL=http://rag-api:8001
+    ports:
+      - "8002:8002"
+    depends_on:
+      rag-api:
+        condition: service_healthy
+    networks:
+      - hr-assistant-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Streamlit Chat Interface
+  streamlit-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hr-assistant-streamlit-chat
+    restart: unless-stopped
+    environment:
+      - RAG_API_URL=http://rag-api:8001
+      - COMPREHENSIVE_API_URL=http://comprehensive-api:8002
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "8501:8501"
+    depends_on:
+      comprehensive-api:
+        condition: service_healthy
+    networks:
+      - hr-assistant-network
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Simple Chat Interface (Alternative)
+  simple-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: hr-assistant-simple-chat
+    restart: unless-stopped
+    environment:
+      - RAG_API_URL=http://rag-api:8001
+      - COMPREHENSIVE_API_URL=http://comprehensive-api:8002
+    ports:
+      - "8503:8503"
+    depends_on:
+      comprehensive-api:
+        condition: service_healthy
+    networks:
+      - hr-assistant-network
+    profiles:
+      - simple-chat
+
+# Named volumes for data persistence
+volumes:
+  mongodb_data:
+    driver: local
+
+# Custom network for service communication
+networks:
+  hr-assistant-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+openai
+pymongo
+motor
+streamlit
+python-dotenv
+aiofiles
