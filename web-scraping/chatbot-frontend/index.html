@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html ng-app="wikipediaRAGChatbot" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikipedia RAG Chatbot</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- AngularJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.8.3/angular.min.js"></script>
+</head>
+<body ng-controller="ChatbotController as vm" class="bg-light">
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-brain me-2"></i>
+                Wikipedia RAG Chatbot
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <i class="fas fa-circle text-{{vm.systemStatus.status === 'healthy' ? 'success' : 'danger'}} me-1"></i>
+                    {{vm.systemStatus.status || 'connecting'}}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Controls</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Add Wikipedia Page -->
+                        <div class="mb-3">
+                            <label class="form-label small">Add Wikipedia Page</label>
+                            <div class="input-group">
+                                <input type="url" 
+                                       class="form-control form-control-sm" 
+                                       ng-model="vm.newPageUrl" 
+                                       placeholder="Wikipedia URL"
+                                       ng-disabled="vm.isAddingPage">
+                                <button class="btn btn-outline-primary btn-sm" 
+                                        ng-click="vm.addWikipediaPage()"
+                                        ng-disabled="!vm.newPageUrl || vm.isAddingPage">
+                                    <i class="fas fa-plus" ng-show="!vm.isAddingPage"></i>
+                                    <i class="fas fa-spinner fa-spin" ng-show="vm.isAddingPage"></i>
+                                </button>
+                            </div>
+                            <div ng-show="vm.addPageMessage" 
+                                 class="alert alert-{{vm.addPageSuccess ? 'success' : 'danger'}} alert-sm mt-2">
+                                {{vm.addPageMessage}}
+                            </div>
+                        </div>
+
+                        <!-- Knowledge Base Info -->
+                        <div class="mb-3">
+                            <label class="form-label small">Knowledge Base</label>
+                            <div class="text-muted small">
+                                <div><strong>Documents:</strong> {{vm.collectionInfo.document_count || 0}}</div>
+                                <div ng-show="vm.collectionInfo.sample_pages.length > 0">
+                                    <strong>Pages:</strong>
+                                    <ul class="list-unstyled mt-1">
+                                        <li ng-repeat="page in vm.collectionInfo.sample_pages" class="text-truncate">
+                                            • {{page}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sample Queries -->
+                        <div class="mb-3">
+                            <label class="form-label small">Sample Queries</label>
+                            <div class="d-grid gap-1">
+                                <button class="btn btn-outline-info btn-sm text-start" 
+                                        ng-repeat="query in vm.sampleQueries.slice(0, 4)" 
+                                        ng-click="vm.sendSampleQuery(query)"
+                                        style="font-size: 0.75rem;">
+                                    {{query.length > 40 ? query.substring(0, 40) + '...' : query}}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-warning btn-sm" ng-click="vm.clearChat()">
+                                <i class="fas fa-trash me-1"></i> Clear Chat
+                            </button>
+                            <button class="btn btn-info btn-sm" ng-click="vm.refreshStatus()">
+                                <i class="fas fa-sync me-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="col-md-9 col-lg-10">
+                <div class="row h-100">
+                    <div class="col-12">
+                        <!-- Chat Container -->
+                        <div class="card shadow-sm h-100" style="min-height: 70vh;">
+                            <!-- Chat Header -->
+                            <div class="card-header bg-primary text-white">
+                                <div class="row align-items-center">
+                                    <div class="col">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-comments me-2"></i>
+                                            Wikipedia Knowledge Chat
+                                        </h5>
+                                    </div>
+                                    <div class="col-auto">
+                                        <small>Powered by OpenAI + ChromaDB</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chat Messages -->
+                            <div class="card-body chat-container" id="chatContainer">
+                                <div ng-show="vm.messages.length === 0" class="text-center text-muted p-4">
+                                    <i class="fas fa-robot fa-3x mb-3"></i>
+                                    <h5>Welcome to Wikipedia RAG Chatbot!</h5>
+                                    <p>Add Wikipedia pages to the knowledge base and start asking questions.</p>
+                                    <p class="small">Try adding: https://en.wikipedia.org/wiki/Health_data</p>
+                                </div>
+
+                                <div ng-repeat="message in vm.messages" class="message-row mb-3">
+                                    <!-- User Message -->
+                                    <div ng-if="message.type === 'user'" class="d-flex justify-content-end">
+                                        <div class="message user-message bg-primary text-white">
+                                            <div class="message-content">{{message.content}}</div>
+                                            <div class="message-time">{{message.timestamp}}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Bot Message -->
+                                    <div ng-if="message.type === 'bot'" class="d-flex justify-content-start">
+                                        <div class="message bot-message bg-light border">
+                                            <div class="message-content">{{message.content}}</div>
+                                            
+                                            <!-- Sources -->
+                                            <div ng-show="message.sources && message.sources.length > 0" class="sources mt-2">
+                                                <small class="text-muted">
+                                                    <strong>Sources:</strong>
+                                                </small>
+                                                <div ng-repeat="source in message.sources" class="source-item small text-muted mt-1">
+                                                    <i class="fas fa-link me-1"></i>
+                                                    <strong>{{source.title}}</strong> - {{source.section}}
+                                                    <span class="badge bg-info ms-2">{{(source.similarity * 100).toFixed(1)}}% match</span>
+                                                    <div class="source-preview mt-1 fst-italic">{{source.preview}}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <div class="message-time">{{message.timestamp}}</div>
+                                                <div ng-show="message.confidence" class="confidence-badge">
+                                                    <span class="badge bg-{{message.confidence > 0.7 ? 'success' : message.confidence > 0.5 ? 'warning' : 'danger'}}">
+                                                        {{(message.confidence * 100).toFixed(1)}}% confidence
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Loading Message -->
+                                    <div ng-if="message.type === 'loading'" class="d-flex justify-content-start">
+                                        <div class="message bot-message bg-light border">
+                                            <div class="message-content">
+                                                <i class="fas fa-spinner fa-spin me-2"></i>
+                                                Thinking...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chat Input -->
+                            <div class="card-footer">
+                                <form ng-submit="vm.sendMessage()" class="d-flex">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           ng-model="vm.currentMessage" 
+                                           placeholder="Ask me anything about the Wikipedia pages you've added..."
+                                           ng-disabled="vm.isLoading">
+                                    <button type="submit" 
+                                            class="btn btn-primary ms-2" 
+                                            ng-disabled="!vm.currentMessage.trim() || vm.isLoading">
+                                        <i class="fas fa-paper-plane" ng-show="!vm.isLoading"></i>
+                                        <i class="fas fa-spinner fa-spin" ng-show="vm.isLoading"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>

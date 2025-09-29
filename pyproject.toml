@@ -25,4 +25,6 @@ members = [
     "legal-document-review",
     "e-commerce-assistant",
     "hr-assistant",
+    "agentic_doc",
+    "web-scraping",
 ]
